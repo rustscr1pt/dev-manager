@@ -1,8 +1,9 @@
 use std::fs::File;
-use std::io;
-use std::io::BufReader;
+use std::{env, io};
+use std::io::{BufReader, Error};
 use serde::Deserialize;
 use thiserror::Error;
+use crate::read_json_config::ReadJsonError::Io;
 
 #[derive(Debug, Deserialize)]
 pub struct ParseJsonConfiguration {
@@ -22,7 +23,14 @@ pub enum ReadJsonError {
 }
 
 pub fn read_json_config() -> Result<ParseJsonConfiguration, ReadJsonError> {
-    match File::open("vps_data.json") {
+    let exe_path = env::current_exe()
+        .map_err(|err| Io(err))?;
+    let exe_dir = exe_path
+        .parent()
+        .ok_or(Io(Error::new(io::ErrorKind::Other, "Failed to get executable binary")))?;
+    let path = exe_dir.join("vps_data.json");
+    println!("{:?}", path);
+    match File::open(path) {
         Ok(file) => {
             let reader = BufReader::new(file);
             match serde_json::from_reader(reader) {
