@@ -3,6 +3,7 @@ use std::net::TcpStream;
 use ssh2::{Session};
 use ssh2::Error as SshError;
 use thiserror::Error;
+use crate::command_executor::command_executor;
 
 #[derive(Error, Debug)]
 pub enum ConnectError {
@@ -26,8 +27,9 @@ pub fn connect_to_vps(user_name : String, password : String, host : String) -> R
                                 Ok(()) => {
                                     if session.authenticated() {
                                         println!("Authenticated");
-                                        // command_executor("screen -X -S api kill", &session);
-                                        // command_executor("./docker_clean.sh", &session);
+                                        command_executor("screen -X -S api kill", &session);
+                                        command_executor("./docker_clean.sh", &session);
+                                        command_executor("./start_api.sh", &session);
                                         return Ok(())
                                     }
                                     else {
