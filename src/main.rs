@@ -10,6 +10,7 @@ fn main() -> () {
         Ok(data) => {
             match connect_to_vps(data.user, data.password, data.host) {
                 Ok(()) => {
+                    println!("Successfully executed");
                     return;
                 }
                 Err(err) => {
