@@ -1,6 +1,6 @@
 use std::io;
 use std::io::Read;
-use ssh2::{Error, Session};
+use ssh2::{Session};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
