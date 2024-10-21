@@ -1,9 +1,10 @@
+use std::fmt::Debug;
 use std::io;
 use std::net::TcpStream;
 use ssh2::{Session};
 use ssh2::Error as SshError;
 use thiserror::Error;
-use crate::shell_executor::command_executor::command_executor;
+use crate::shell_executor::command_executor::{command_executor, CommandExecutorError};
 
 #[derive(Error, Debug)]
 pub enum ConnectError {
@@ -12,7 +13,9 @@ pub enum ConnectError {
     #[error("SSH error: {0}")]
     Ssh(#[from] SshError),
     #[error("Custom error: {0}")]
-    Custom(String)
+    Custom(String),
+    #[error("CommandExecutorError: {0}")]
+    CommandExecutorError(CommandExecutorError)
 }
 
 pub fn connect_to_vps(user_name : String, password : String, host : String) -> Result<(), ConnectError> {
@@ -27,10 +30,28 @@ pub fn connect_to_vps(user_name : String, password : String, host : String) -> R
                                 Ok(()) => {
                                     if session.authenticated() {
                                         println!("Authenticated");
-                                        command_executor("screen -X -S api kill", &session);
-                                        command_executor("./docker_clean.sh", &session);
-                                        command_executor("./start_api.sh", &session);
-                                        return Ok(())
+                                        match command_executor("screen -X -S api kill", &session) {
+                                            Ok(()) => {
+                                                match command_executor("./docker_clean.sh", &session) {
+                                                    Ok(()) => {
+                                                        match command_executor("./start_api.sh", &session) {
+                                                            Ok(()) => {
+                                                                return Ok(())
+                                                            }
+                                                            Err(err) => {
+                                                                return Err(ConnectError::CommandExecutorError(err))
+                                                            }
+                                                        }
+                                                    }
+                                                    Err(err) => {
+                                                        return Err(ConnectError::CommandExecutorError(err))
+                                                    }
+                                                }
+                                            }
+                                            Err(err) => {
+                                                return Err(ConnectError::CommandExecutorError(err))
+                                            }
+                                        }
                                     }
                                     else {
                                         return Err(ConnectError::Custom("Couldn't authenticate.".to_string()))
