@@ -1,22 +1,29 @@
-use crate::connect_to_vps::connect_to_vps::connect_to_vps;
+use thiserror::Error;
+use crate::connect_to_vps::connect_to_vps::{connect_to_vps, ConnectError};
 use crate::read_json_config::read_json_config::{read_json_config, ReadJsonError};
 
-pub fn execute() -> Result<(), ReadJsonError> {
+#[derive(Error, Debug)]
+pub enum ExecuteError {
+    #[error("IO error: {0}")]
+    ConnectError(#[from] ConnectError),
+    #[error("SerdeJson error: {0}")]
+    SerdeJson(#[from] ReadJsonError)
+}
+
+pub fn execute() -> Result<(), ExecuteError> {
     match read_json_config() {
         Ok(data) => {
             match connect_to_vps(data.user, data.password, data.host) {
                 Ok(()) => {
-                    println!("Successfully executed");
                     return Ok(());
                 }
                 Err(err) => {
-                    println!("{}", err);
-                    return Ok(());
+                    return Err(ExecuteError::ConnectError(err));
                 }
             }
         }
         Err(err) => {
-            return Err(err)
+            return Err(ExecuteError::SerdeJson(err))
         }
     }
 }
