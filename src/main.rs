@@ -1,9 +1,18 @@
-mod run_manager;
+use crate::executor::execute::execute;
 
-use crate::run_manager::run_manager;
+mod shell_executor;
+mod connect_to_vps;
+mod read_json_config;
+mod executor;
+
 
 fn main() -> () {
-    match run_manager() {
-
+    match execute() {
+        Ok(()) => {
+            println!("Successfully executed.")
+        }
+        Err(err) => {
+            println!("Couldn't find a configuration file\n{}", err)
+        }
     }
 }

@@ -3,7 +3,7 @@ use std::{env, io};
 use std::io::{BufReader, Error};
 use serde::Deserialize;
 use thiserror::Error;
-use crate::read_json_config::ReadJsonError::{Io, SerdeJson};
+use crate::read_json_config::read_json_config::ReadJsonError::{Io, SerdeJson};
 
 #[derive(Debug, Deserialize)]
 pub struct ParseJsonConfiguration {
@@ -17,9 +17,7 @@ pub enum ReadJsonError {
     #[error("IO error: {0}")]
     Io(#[from] io::Error),
     #[error("SerdeJson error: {0}")]
-    SerdeJson(#[from] serde_json::error::Error),
-    #[error("Custom error: {0}")]
-    Custom(String)
+    SerdeJson(#[from] serde_json::error::Error)
 }
 
 pub fn read_json_config() -> Result<ParseJsonConfiguration, ReadJsonError> {

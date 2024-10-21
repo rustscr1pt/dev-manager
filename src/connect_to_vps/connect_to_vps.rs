@@ -3,7 +3,7 @@ use std::net::TcpStream;
 use ssh2::{Session};
 use ssh2::Error as SshError;
 use thiserror::Error;
-use crate::command_executor::command_executor;
+use crate::shell_executor::command_executor::command_executor;
 
 #[derive(Error, Debug)]
 pub enum ConnectError {
